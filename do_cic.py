@@ -14,6 +14,8 @@ posx_filename = '...'
 posy_filename = '...'
 posz_filename = '...'
 
+weights_filename = '...'
+
 # Output DM field name
 out_filename = '...'
 
@@ -22,10 +24,11 @@ lbox = 1000.
 ngrid = 256 
 
 compute_delta = True
+use_weights = True
 
 # **********************************************
 @njit(parallel=False, cache=True, fastmath=True)
-def get_cic(posx, posy, posz, lbox, ngrid):
+def get_cic(posx, posy, posz, weight, lbox, ngrid):
 
     lcell = lbox/ngrid
 
@@ -91,14 +94,16 @@ def get_cic(posx, posy, posz, lbox, ngrid):
 
         #print(indxc,indyc,indzc)
 
-        delta[indxc,indyc,indzc] += wxc*wyc*wzc
-        delta[indxl,indyc,indzc] += wxl*wyc*wzc
-        delta[indxc,indyl,indzc] += wxc*wyl*wzc
-        delta[indxc,indyc,indzl] += wxc*wyc*wzl
-        delta[indxl,indyl,indzc] += wxl*wyl*wzc
-        delta[indxc,indyl,indzl] += wxc*wyl*wzl
-        delta[indxl,indyc,indzl] += wxl*wyc*wzl
-        delta[indxl,indyl,indzl] += wxl*wyl*wzl
+        ww = weight[ii]
+
+        delta[indxc,indyc,indzc] += ww * wxc*wyc*wzc
+        delta[indxl,indyc,indzc] += ww * wxl*wyc*wzc
+        delta[indxc,indyl,indzc] += ww * wxc*wyl*wzc
+        delta[indxc,indyc,indzl] += ww * wxc*wyc*wzl
+        delta[indxl,indyl,indzc] += ww * wxl*wyl*wzc
+        delta[indxc,indyl,indzl] += ww * wxc*wyl*wzl
+        delta[indxl,indyc,indzl] += ww * wxl*wyc*wzl
+        delta[indxl,indyl,indzl] += ww * wxl*wyl*wzl
 
     if compute_delta == True:
         delta = delta/np.mean(delta) - 1.
@@ -117,7 +122,14 @@ posx = np.fromfile(open(posx_filename, 'r'), dtype=np.float32)
 posy = np.fromfile(open(posy_filename, 'r'), dtype=np.float32)
 posz = np.fromfile(open(posz_filename, 'r'), dtype=np.float32)
 
-delta = get_cic(posx, posy, posz, lbox, ngrid)
+if use_weights == True:
+    weights = np.fromfile(open(weights_filename, 'r'), dtype=np.float32)
+
+else:
+    weights = np.ones(len(posx))
+        
+
+delta = get_cic(posx, posy, posz, weights, lbox, ngrid)
 
 delta.astype('float32').tofile(out_filename)
  
