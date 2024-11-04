@@ -20,7 +20,9 @@ out_filename = '...'
 # General
 lbox = 1000.
 ngrid = 256 
-  
+
+compute_delta = True
+
 # **********************************************
 @njit(parallel=False, cache=True, fastmath=True)
 def get_cic(posx, posy, posz, lbox, ngrid):
@@ -98,7 +100,8 @@ def get_cic(posx, posy, posz, lbox, ngrid):
         delta[indxl,indyc,indzl] += wxl*wyc*wzl
         delta[indxl,indyl,indzl] += wxl*wyl*wzl
 
-    delta = delta/np.mean(delta) - 1.
+    if compute_delta == True:
+        delta = delta/np.mean(delta) - 1.
 
     return delta
 
