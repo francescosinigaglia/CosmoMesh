@@ -22,7 +22,7 @@ lbox = 1000.
 ngrid = 256 
   
 # **********************************************
-@njit(parallel=True, cache=True, fastmath=True)
+@njit(parallel=False, cache=True, fastmath=True)
 def get_cic(posx, posy, posz, lbox, ngrid):
 
     lcell = lbox/ngrid
@@ -36,6 +36,13 @@ def get_cic(posx, posy, posz, lbox, ngrid):
         indxc = int(xx/lcell)
         indyc = int(yy/lcell)
         indzc = int(zz/lcell)
+
+        if indxc >= ngrid:
+            indxc -= ngrid
+        if indyc >= ngrid:
+            indyc -= ngrid
+        if indzc >= ngrid:
+            indzc -= ngrid
 
         wxc = xx/lcell - indxc
         wyc = yy/lcell - indyc
@@ -51,7 +58,8 @@ def get_cic(posx, posy, posz, lbox, ngrid):
             indxl = indxc + 1
             if indxl>=ngrid:
                 indxl -= ngrid
-            wxl = 1 - wxc
+            wxl = wxc - 0.5
+            wxc = 1 - wxl
 
         if wyc <=0.5:
             indyl = indyc - 1
@@ -63,7 +71,8 @@ def get_cic(posx, posy, posz, lbox, ngrid):
             indyl = indyc + 1
             if indyl>=ngrid:
                 indyl -= ngrid
-            wyl = 1 - wyc
+            wyl = wyc - 0.5
+            wyc = 1 - wyl
 
         if wzc <=0.5:
             indzl = indzc - 1
@@ -75,7 +84,8 @@ def get_cic(posx, posy, posz, lbox, ngrid):
             indzl = indzc + 1
             if indzl>=0:
                 indzl -= ngrid
-            wzl = 1 - wzc
+            wzl = wzc - 0.5
+            wzc = 1 - wzl
 
         #print(indxc,indyc,indzc)
 
